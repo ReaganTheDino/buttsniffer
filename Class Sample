@@ -1,0 +1,39 @@
+## buttsniffer
+import socket, sys
+from impacket import ImpactDecoder
+from struct import *
+
+# create AF_SOCKET
+def createSocket(protocolNum):
+	try:
+		return socket.socket(socket.AF_INET, socket.SOCK_RAW, protocolNum)
+	except socket.error, msg:
+		print str(msg[0]) + ' ' + msg[1]
+		sys.exit()
+
+def main():
+	# cli TODO
+	usrInput = raw_input('argh matie! establish tis protocol: ')
+
+	protocolNum = socket.getprotobyname(usrInput) # get port num
+	s = createSocket(protocolNum)
+	s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+	s.listen(1)
+	print "The server is ready to recieve"
+
+	decoder = ImpactDecoder.IPDecoder()
+
+	while 1:
+		# decode and print packet
+		packet = s.recvfrom(4096)[0]
+		packet = decoder.decode(packet) # black magic and ImpactDecoder modual
+		print packet
+
+		connectionSocket, addr = s.accept()
+		sentence = connectionSocket.recv(1024)
+		capitalizedSentence = sentence.upper()
+		connectionSocket.send(capitalizedSentence)
+		connectionSocket.close()
+
+if __name__ == '__main__':
+	main()
